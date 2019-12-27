@@ -1,0 +1,2 @@
+include ':app', ':tsindicator'
+rootProject.name='TSIndicatorDemo'
