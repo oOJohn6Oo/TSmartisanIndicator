@@ -14,20 +14,20 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        val images = object : ArrayList<ImageView>() {}
-        val imageView = object : ImageView(this) {}
+        val images = arrayListOf<ImageView>()
+        val imageView = ImageView(this)
         imageView.setBackgroundColor(Color.GREEN)
-        val imageView2 = object : ImageView(this) {}
+        val imageView2 = ImageView(this)
         imageView2.setBackgroundColor(Color.WHITE)
-        val imageView3 = object : ImageView(this) {}
+        val imageView3 = ImageView(this)
         imageView3.setBackgroundColor(Color.RED)
-        val imageView4 = object : ImageView(this) {}
+        val imageView4 = ImageView(this)
         imageView4.setBackgroundColor(Color.YELLOW)
         images.add(imageView)
         images.add(imageView2)
         images.add(imageView3)
         images.add(imageView4)
-        smartisan_indicator.setDotCount(4).connect(viewPager).setDotRadius(10).build()
+        smartisan_indicator.setDotCount(4).connect(viewPager).build()
         viewPager.offscreenPageLimit = 4
         viewPager.adapter = object : PagerAdapter() {
             override fun getCount(): Int {

@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">TSIndicator</string>
+    <string name="dot_diameter">直径</string>
 </resources>

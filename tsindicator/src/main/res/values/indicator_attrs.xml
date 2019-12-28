@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <attr name="dot_diameter" format="dimension"/>
+    <declare-styleable name="TSIndicator">
+        <attr name="dot_diameter"/>
+    </declare-styleable>
+</resources>

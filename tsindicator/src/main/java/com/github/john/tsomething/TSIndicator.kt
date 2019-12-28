@@ -14,9 +14,13 @@ import kotlinx.android.synthetic.main.item_si.view.*
 
 class TSIndicator(context: Context, attrs: AttributeSet?, defStyle: Int) :
     LinearLayout(context, attrs, defStyle) {
-    private val density: Float = dp2Px(1f)
+    private var density: Float = TypedValue.applyDimension(
+        TypedValue.COMPLEX_UNIT_DIP,
+        1f,
+        context.resources.displayMetrics
+    )
     private var dotCount: Int = 0
-    private var dotRadius: Int = 20
+    private var dotDiameter: Float
     private var currentIndex: Int = 0
     private var viewPager: ViewPager? = null
     private var onPageChangeListener: ViewPager.OnPageChangeListener? = null
@@ -25,34 +29,51 @@ class TSIndicator(context: Context, attrs: AttributeSet?, defStyle: Int) :
     constructor(context: Context, attrs: AttributeSet?) : this(context, attrs, -1)
 
     init {
-        orientation = HORIZONTAL
+        val typedArray = context.obtainStyledAttributes(attrs,R.styleable.TSIndicator,defStyle,0)
+        dotDiameter=typedArray.getDimension(R.styleable.TSIndicator_dot_diameter,10f)
+        typedArray.recycle()
     }
 
-    private fun startScroll(position: Int, positionOffset: Float) {
+    /**
+     * @param position same as viewPager, 0 -> 1《==》0, 1 ->0 《==》0
+     * @param positionOffset same as viewPager, 0 -> 1 <==> 0f -> 1f, 1 -> 0 《==》1f -> 0f
+     *
+     * Which means I can use ONE Int value to control both of changing items
+     */
+    fun startScroll(position: Int, positionOffset: Float) {
         if (position + 1 >= dotCount) return
         val currentItem = (getChildAt(position) as FrameLayout).inner_si
         val nextItem = (getChildAt(position + 1) as FrameLayout).inner_si
 
         currentItem.layoutParams = (currentItem.layoutParams as FrameLayout.LayoutParams).also {
             it.marginEnd = 0
-            it.marginStart = (2*dotRadius * density * positionOffset).toInt()
+            it.marginStart = (2*dotDiameter * density * positionOffset).toInt()
         }
         nextItem.layoutParams = (nextItem.layoutParams as FrameLayout.LayoutParams).also {
-            it.marginEnd = (2*dotRadius * density * (1 - positionOffset)).toInt()
+            it.marginEnd = (2*dotDiameter * density * (1 - positionOffset)).toInt()
             it.marginStart = 0
         }
     }
 
-    fun setDotRadius(radiusInDp:Int):TSIndicator{
-        dotRadius = radiusInDp
+    /**
+     * 设置直径（外圆）
+     */
+    fun setDotDiameter(diameterInDp:Float):TSIndicator{
+        dotDiameter = diameterInDp
         return this
     }
 
+    /**
+     * 与viewPager链接
+     */
     fun connect(viewPager: ViewPager):TSIndicator {
         this.viewPager = viewPager
         return this
     }
 
+    /**
+     * 与 connect() 配合使用
+     */
     fun setOnPageChangeListener(onPageChangeListener: ViewPager.OnPageChangeListener): TSIndicator {
         this.onPageChangeListener = onPageChangeListener
         return this
@@ -68,26 +89,26 @@ class TSIndicator(context: Context, attrs: AttributeSet?, defStyle: Int) :
         for (i in 0 until dotCount) {
             val itemView = LayoutInflater.from(context).inflate(R.layout.item_si, this, false)
             itemView.layoutParams = with(itemView.layoutParams as LayoutParams){
-                width = (2*dotRadius * density).toInt()
+                width = (2*dotDiameter * density).toInt()
                 this
             }
             itemView.outer_si.layoutParams = (itemView.outer_si.layoutParams as FrameLayout.LayoutParams).also {
-                it.width = (dotRadius * density).toInt()
-                it.height = (dotRadius * density).toInt()
+                it.width = (dotDiameter * density).toInt()
+                it.height = (dotDiameter * density).toInt()
             }
             itemView.inner_si.layoutParams = (itemView.inner_si.layoutParams as FrameLayout.LayoutParams).apply {
-                width = (dotRadius * density).toInt()
-                height = (dotRadius * density).toInt()
-                marginEnd = (2 * dotRadius * density).toInt()
+                width = (dotDiameter * density).toInt()
+                height = (dotDiameter * density).toInt()
+                marginEnd = (2 * dotDiameter * density).toInt()
             }
             itemView.clipToOutline = true
             itemView.outlineProvider = object : ViewOutlineProvider() {
                 override fun getOutline(view: View, outline: Outline?) {
                     outline?.setOval(
-                        (density * dotRadius/2).toInt(),
+                        (density * dotDiameter/2).toInt(),
                         0,
-                        (density * dotRadius *1.5f).toInt(),
-                        (density * dotRadius).toInt()
+                        (density * dotDiameter *1.5f).toInt(),
+                        (density * dotDiameter).toInt()
                     )
                 }
             }
@@ -144,11 +165,4 @@ class TSIndicator(context: Context, attrs: AttributeSet?, defStyle: Int) :
         }
     }
 
-    private fun dp2Px(dp: Float): Float {
-        return TypedValue.applyDimension(
-            TypedValue.COMPLEX_UNIT_DIP,
-            dp,
-            context.resources.displayMetrics
-        )
-    }
 }
