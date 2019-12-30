@@ -9,6 +9,7 @@ import android.view.View
 import android.view.ViewOutlineProvider
 import android.widget.FrameLayout
 import android.widget.LinearLayout
+import androidx.core.view.marginTop
 import androidx.viewpager.widget.ViewPager
 import kotlinx.android.synthetic.main.item_si.view.*
 
@@ -19,18 +20,18 @@ class TSIndicator(context: Context, attrs: AttributeSet?, defStyle: Int) :
         1f,
         context.resources.displayMetrics
     )
-    private var dotCount: Int = 0
+    internal var dotCount: Int = 0
     private var dotDiameter: Float
-    private var currentIndex: Int = 0
+    internal var currentIndex: Int = 0
     private var viewPager: ViewPager? = null
-    private var onPageChangeListener: ViewPager.OnPageChangeListener? = null
+    internal var onPageChangeListener: ViewPager.OnPageChangeListener? = null
 
     constructor(context: Context) : this(context, null)
     constructor(context: Context, attrs: AttributeSet?) : this(context, attrs, -1)
 
     init {
-        val typedArray = context.obtainStyledAttributes(attrs,R.styleable.TSIndicator,defStyle,0)
-        dotDiameter=typedArray.getDimension(R.styleable.TSIndicator_dot_diameter,10f)
+        val typedArray = context.obtainStyledAttributes(attrs, R.styleable.TSIndicator, defStyle, 0)
+        dotDiameter = typedArray.getDimension(R.styleable.TSIndicator_dot_diameter, 10f)
         typedArray.recycle()
     }
 
@@ -45,20 +46,31 @@ class TSIndicator(context: Context, attrs: AttributeSet?, defStyle: Int) :
         val currentItem = (getChildAt(position) as FrameLayout).inner_si
         val nextItem = (getChildAt(position + 1) as FrameLayout).inner_si
 
-        currentItem.layoutParams = (currentItem.layoutParams as FrameLayout.LayoutParams).also {
-            it.marginEnd = 0
-            it.marginStart = (2*dotDiameter * density * positionOffset).toInt()
-        }
-        nextItem.layoutParams = (nextItem.layoutParams as FrameLayout.LayoutParams).also {
-            it.marginEnd = (2*dotDiameter * density * (1 - positionOffset)).toInt()
-            it.marginStart = 0
+        if(orientation == HORIZONTAL) {
+            currentItem.layoutParams = (currentItem.layoutParams as FrameLayout.LayoutParams).also {
+                it.marginEnd = 0
+                it.marginStart = (2 * dotDiameter * density * positionOffset).toInt()
+            }
+            nextItem.layoutParams = (nextItem.layoutParams as FrameLayout.LayoutParams).also {
+                it.marginEnd = (2 * dotDiameter * density * (1 - positionOffset)).toInt()
+                it.marginStart = 0
+            }
+        }else{
+            currentItem.layoutParams = (currentItem.layoutParams as FrameLayout.LayoutParams).also {
+                it.bottomMargin = 0
+                it.topMargin = (2 * dotDiameter * density * positionOffset).toInt()
+            }
+            nextItem.layoutParams = (nextItem.layoutParams as FrameLayout.LayoutParams).also {
+                it.bottomMargin = (2 * dotDiameter * density * (1 - positionOffset)).toInt()
+                it.topMargin = 0
+            }
         }
     }
 
     /**
      * 设置直径（外圆）
      */
-    fun setDotDiameter(diameterInDp:Float):TSIndicator{
+    fun setDotDiameter(diameterInDp: Float): TSIndicator {
         dotDiameter = diameterInDp
         return this
     }
@@ -66,7 +78,7 @@ class TSIndicator(context: Context, attrs: AttributeSet?, defStyle: Int) :
     /**
      * 与viewPager链接
      */
-    fun connect(viewPager: ViewPager):TSIndicator {
+    fun connect(viewPager: ViewPager): TSIndicator {
         this.viewPager = viewPager
         return this
     }
@@ -84,39 +96,49 @@ class TSIndicator(context: Context, attrs: AttributeSet?, defStyle: Int) :
         return this
     }
 
-    fun build(){
+    fun build() {
         //初始化 小圆点
         for (i in 0 until dotCount) {
+            val baseValue: Int = (dotDiameter * density).toInt()
             val itemView = LayoutInflater.from(context).inflate(R.layout.item_si, this, false)
-            itemView.layoutParams = with(itemView.layoutParams as LayoutParams){
-                width = (2*dotDiameter * density).toInt()
+            itemView.layoutParams = with(itemView.layoutParams as LayoutParams) {
+                if (orientation == HORIZONTAL)
+                    width = baseValue.shl(1)
+                else
+                    height = baseValue.shl(1)
                 this
             }
-            itemView.outer_si.layoutParams = (itemView.outer_si.layoutParams as FrameLayout.LayoutParams).also {
-                it.width = (dotDiameter * density).toInt()
-                it.height = (dotDiameter * density).toInt()
-            }
-            itemView.inner_si.layoutParams = (itemView.inner_si.layoutParams as FrameLayout.LayoutParams).apply {
-                width = (dotDiameter * density).toInt()
-                height = (dotDiameter * density).toInt()
-                marginEnd = (2 * dotDiameter * density).toInt()
-            }
+            itemView.outer_si.layoutParams =
+                (itemView.outer_si.layoutParams as FrameLayout.LayoutParams).also {
+                    it.width = baseValue
+                    it.height = baseValue
+                }
+            itemView.inner_si.layoutParams =
+                (itemView.inner_si.layoutParams as FrameLayout.LayoutParams).apply {
+                    width = baseValue
+                    height = baseValue
+                    if (orientation == HORIZONTAL) marginEnd = baseValue.shl(1)
+                    else topMargin  = baseValue.shl(1)
+                }
             itemView.clipToOutline = true
             itemView.outlineProvider = object : ViewOutlineProvider() {
                 override fun getOutline(view: View, outline: Outline?) {
+                    if(orientation == HORIZONTAL)
                     outline?.setOval(
-                        (density * dotDiameter/2).toInt(),
+                        baseValue.shr(1),
                         0,
-                        (density * dotDiameter *1.5f).toInt(),
-                        (density * dotDiameter).toInt()
+                        baseValue.shr(1)+baseValue,
+                        baseValue
                     )
+                    else
+                        outline?.setOval(0,baseValue.shr(1),baseValue,baseValue+baseValue.shr(1))
                 }
             }
             addView(itemView)
         }
 
         // 监听事件
-        viewPager?.apply{
+        viewPager?.apply {
             addOnPageChangeListener(object : ViewPager.OnPageChangeListener {
                 override fun onPageScrollStateChanged(state: Int) {
                     onPageChangeListener?.onPageScrollStateChanged(state)

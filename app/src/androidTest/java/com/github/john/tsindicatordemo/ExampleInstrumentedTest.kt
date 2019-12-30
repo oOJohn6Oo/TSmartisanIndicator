@@ -1,4 +1,4 @@
-package com.github.john.tdemo
+package com.github.john.tsindicatordemo
 
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.ext.junit.runners.AndroidJUnit4

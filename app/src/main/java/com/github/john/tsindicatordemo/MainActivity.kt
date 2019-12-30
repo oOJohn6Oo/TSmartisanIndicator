@@ -1,4 +1,4 @@
-package com.github.john.tdemo
+package com.github.john.tsindicatordemo
 
 import android.graphics.Color
 import android.os.Bundle
